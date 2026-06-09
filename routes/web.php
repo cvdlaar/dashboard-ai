@@ -45,6 +45,9 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/seo', [SeoController::class, 'index'])->name('seo.index');
     Route::get('/cwv', [CwvController::class, 'index'])->name('cwv.index');
     Route::get('/geo', [GeoController::class, 'index'])->name('geo.index');
+    Route::post('/geo/mention-share', [GeoController::class, 'updateMentionShare'])->name('geo.mention-share');
+    Route::get('/geo/export', [GeoController::class, 'export'])->name('geo.export');
+    Route::get('/geo/llms-txt', [GeoController::class, 'llmsTxt'])->name('geo.llms-txt');
     Route::get('/ads', [AdsController::class, 'index'])->name('ads.index');
 
     Route::middleware('role:admin')->prefix('admin')->name('admin.')->group(function () {
