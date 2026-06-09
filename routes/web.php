@@ -11,6 +11,7 @@ use App\Http\Controllers\AdsController;
 use App\Http\Controllers\Admin\SiteController as AdminSiteController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Admin\IntegrationController as AdminIntegrationController;
+use App\Http\Controllers\Admin\OAuthController as AdminOAuthController;
 use App\Http\Controllers\Admin\ProductGroupController as AdminProductGroupController;
 
 Route::get('/', fn() => redirect()->route('login'));
@@ -57,8 +58,12 @@ Route::middleware(['auth'])->group(function () {
         Route::post('integrations/{site}/{platform}/sync', [AdminIntegrationController::class, 'sync'])->name('integrations.sync');
         Route::delete('integrations/{site}/{platform}', [AdminIntegrationController::class, 'destroy'])->name('integrations.destroy');
 
+        // Google OAuth
+        Route::get('oauth/google/{site}/{platform}', [AdminOAuthController::class, 'redirectToGoogle'])->name('oauth.google.redirect');
+        Route::get('oauth/google/callback', [AdminOAuthController::class, 'handleGoogleCallback'])->name('oauth.google.callback');
+
         // Productgroepen
-        Route::resource('product-groups', AdminProductGroupController::class);
+        Route::resource('product-groups', AdminProductGroupController::class)->except(['show']);
         Route::post('product-groups/{productGroup}/assign-users', [AdminProductGroupController::class, 'assignUsers'])->name('product-groups.assign-users');
         Route::post('product-groups/{productGroup}/assign-pages', [AdminProductGroupController::class, 'assignPages'])->name('product-groups.assign-pages');
     });

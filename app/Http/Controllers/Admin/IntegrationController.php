@@ -76,19 +76,30 @@ class IntegrationController extends Controller
         $integration->settings = $settings;
 
         // Credentials (gevoelig: versleuteld opslaan)
-        $credFields = ['api_key', 'client_secret', 'feed_url', 'access_token', 'refresh_token'];
-        $creds = [];
-        foreach ($credFields as $field) {
-            if ($request->filled($field) && $request->input($field) !== '••••••••') {
-                $creds[$field] = $request->input($field);
+        // Bestaande credentials ophalen zodat we niet per ongeluk tokens overschrijven
+        $existing = [];
+        if ($integration->exists) {
+            try {
+                $raw = $integration->getAttributes()['credentials'] ?? null;
+                $existing = $raw ? json_decode(decrypt($raw), true) ?? [] : [];
+            } catch (\Exception) {
+                $existing = [];
             }
         }
 
-        if (!empty($creds)) {
-            $integration->setCredentials($creds);
+        $credFields = ['client_id', 'client_secret', 'api_key', 'feed_url', 'access_token', 'refresh_token'];
+        $creds = $existing;
+
+        foreach ($credFields as $field) {
+            $val = $request->input($field);
+            if ($request->filled($field) && $val !== '••••••••') {
+                $creds[$field] = $val;
+            }
         }
 
-        if ($platformConfig['auth'] === 'api_key' && !empty($creds)) {
+        $integration->setCredentials($creds);
+
+        if ($platformConfig['auth'] === 'api_key' && !empty($creds['api_key'] ?? $creds['feed_url'] ?? null)) {
             $integration->status = 'connected';
         }
 
@@ -121,14 +132,10 @@ class IntegrationController extends Controller
             'bing_ads'              => 'sync:bing-ads',
             'channable'             => 'import:channable',
             'pagespeed'             => 'scan:cwv',
+            'sitemap'               => 'import:sitemap',
         ];
 
-        // Sitemap heeft geen koppeling nodig maar is wel een sync-actie
-        if ($platform === 'sitemap') {
-            $command = 'import:sitemap';
-        } else {
-            $command = $commands[$platform] ?? null;
-        }
+        $command = $commands[$platform] ?? null;
 
         if (!$command) {
             return back()->with('error', 'Geen sync beschikbaar voor dit platform.');

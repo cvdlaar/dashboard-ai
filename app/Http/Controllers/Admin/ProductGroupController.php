@@ -11,12 +11,18 @@ use Illuminate\Http\Request;
 
 class ProductGroupController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $sites = Site::where('is_active', true)->get();
 
-        $currentSiteId = session('current_site_id') ?? $sites->first()?->id;
+        $currentSiteId = $request->query('site_id')
+            ?? session('current_site_id')
+            ?? $sites->first()?->id;
         $currentSite = $sites->firstWhere('id', $currentSiteId) ?? $sites->first();
+
+        if ($request->query('site_id')) {
+            session(['current_site_id' => $currentSite->id]);
+        }
 
         $groups = ProductGroup::where('site_id', $currentSite->id)
             ->withCount('pages')

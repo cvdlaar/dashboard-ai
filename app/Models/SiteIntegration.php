@@ -71,19 +71,6 @@ class SiteIntegration extends Model
         return $this->belongsTo(Site::class);
     }
 
-    public function syncLogs()
-    {
-        return $this->hasMany(SyncLog::class, 'site_id', 'site_id')
-            ->where('type', $this->platform);
-    }
-
-    public function latestSyncLog()
-    {
-        return $this->hasOne(SyncLog::class, 'site_id', 'site_id')
-            ->where('type', $this->platform)
-            ->latestOfMany();
-    }
-
     public function isConnected(): bool
     {
         return $this->status === 'connected';
